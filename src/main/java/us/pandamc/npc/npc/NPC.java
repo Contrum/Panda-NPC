@@ -71,6 +71,9 @@ public class NPC {
 
     public static void loadNPCs(){
         ConfigurationSection section = PandaNPC.get().getNpcsConfig().getConfiguration().getConfigurationSection("npcs");
+
+        if(section == null) return;
+
         section.getKeys(false).forEach(key -> {
             String name = section.getString(key + ".name");
             String displayName = section.getString(key + ".displayName");

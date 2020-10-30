@@ -2,5 +2,7 @@ name: NPC
 author: EnzoL_
 main: us.pandamc.npc.PandaNPC
 version: 1.0-SNAPSHOT
-softdepend:
+depend:
   - ProtocolLib
+commands:
+  pandanpc:
