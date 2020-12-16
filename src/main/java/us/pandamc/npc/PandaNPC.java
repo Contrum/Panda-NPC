@@ -17,6 +17,7 @@ import us.pandamc.npc.npc.NPC;
 import us.pandamc.npc.utils.ItemUtils;
 import us.pandamc.npc.utils.LocationUtil;
 import us.pandamc.npc.utils.nms.NPCPackets;
+import us.pandamc.npc.utils.nms.impl.NPCPackets1_7;
 import us.pandamc.npc.utils.nms.impl.NPCPackets1_8;
 
 @Getter
@@ -31,9 +32,15 @@ public class PandaNPC extends JavaPlugin {
     public void onEnable() {
         npcsConfig = new BasicConfigurationFile(this, "npcs");
 
-        packets = new NPCPackets1_8();
-
         this.protocolManager = ProtocolLibrary.getProtocolManager();
+
+        System.out.println("Version: " + getVersion());
+
+        if(getVersion().equalsIgnoreCase("v1_8_R3")){
+            packets = new NPCPackets1_8();
+        }else if(getVersion().equalsIgnoreCase("v1_7_R4")){
+            packets = new NPCPackets1_7();
+        }
 
         registerListeners();
         registerCommands();
@@ -49,6 +56,10 @@ public class PandaNPC extends JavaPlugin {
 
     private void registerCommands() {
         registerCommand(new PandaNPCCommand(), getName());
+    }
+
+    private String getVersion(){
+        return getServer().getClass().getPackage().getName().substring(getServer().getClass().getPackage().getName().lastIndexOf('.') + 1);
     }
 
     public static PandaNPC get(){
