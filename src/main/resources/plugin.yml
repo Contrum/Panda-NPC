@@ -1,8 +1,6 @@
-name: NPC
+name: PandaNPC
 author: EnzoL_
 main: us.pandamc.npc.PandaNPC
 version: 1.0-SNAPSHOT
 depend:
   - ProtocolLib
-commands:
-  pandanpc:

@@ -31,6 +31,7 @@ public class NPCPackets1_8 implements NPCPackets {
         WrappedGameProfile profile = WrappedGameProfile.fromPlayer(player);
 
         WrappedSignedProperty current = Iterables.getFirst(profile.getProperties().get("textures"), null);
+        assert current != null;
         String texture = current.getValue();
         String signature = current.getSignature();
 

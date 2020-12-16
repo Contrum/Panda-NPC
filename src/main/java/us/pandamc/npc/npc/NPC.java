@@ -20,16 +20,14 @@ import java.util.UUID;
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class NPC {
+
     @Getter private static Map<String, NPC> npcs = Maps.newHashMap();
     private final Map<UUID, Integer> entitys = Maps.newHashMap();
 
-    private final String name;
-    private String displayName;
-    private Location location;
+    private final String name, displayName;
+    private final Location location;
     private ItemStack helmet, chest, legs, boots, hand;
-    private float yaw;
-    private float headYaw;
-    private float pitch;
+    private float yaw, headYaw, pitch;
     private String command;
 
     public static NPC getByName(String name){
@@ -46,27 +44,27 @@ public class NPC {
         return null;
     }
 
-
-    public void save(){
+    public void save() {
         ConfigurationSection section = PandaNPC.get().getNpcsConfig().getConfiguration().getConfigurationSection("npcs");
 
         section.set("name", this.name);
         section.set("displayName." + this.name, this.displayName);
         section.set("location." + this.name, LocationUtil.serialize(this.location));
 
-        section.set("helmet." + this.name, ItemUtils.serialize(this.helmet));
-        section.set("chest." + this.name, ItemUtils.serialize(this.chest));
-        section.set("legs." + this.name, ItemUtils.serialize(this.legs));
-        section.set("boots." + this.name, ItemUtils.serialize(this.boots));
-        section.set("hand." + this.name, ItemUtils.serialize(this.hand));
+        if (this.helmet != null) section.set("helmet." + this.name, ItemUtils.serialize(this.helmet));
+        if (this.chest != null) section.set("chest." + this.name, ItemUtils.serialize(this.chest));
+        if (this.legs != null) section.set("legs." + this.name, ItemUtils.serialize(this.legs));
+        if (this.boots != null) section.set("boots." + this.name, ItemUtils.serialize(this.boots));
+        if (this.hand != null) section.set("hand." + this.name, ItemUtils.serialize(this.hand));
 
-        section.set("yaw." + this.name, this.yaw);
-        section.set("headYaw." + this.name, this.headYaw);
-        section.set("pitch." + this.name, this.pitch);
+        section.set("yaw." + this.name, this.location.getYaw());
+        section.set("headYaw." + this.name, this.location.getYaw());
+        section.set("pitch." + this.name, this.location.getPitch());
 
-        section.set("command." + this.name, this.command);
+        if (this.command != null) section.set("command." + this.name, this.command);
 
         PandaNPC.get().getNpcsConfig().save();
+        PandaNPC.get().getNpcsConfig().reload();
     }
 
     public static void loadNPCs(){
