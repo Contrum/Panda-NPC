@@ -1,5 +1,9 @@
 package us.pandamc.npc.utils.nms.impl;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import com.google.common.collect.Iterables;
@@ -18,6 +22,7 @@ import us.pandamc.npc.utils.CC;
 import us.pandamc.npc.utils.NPCUtils;
 import us.pandamc.npc.utils.nms.NPCPackets;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,12 +36,17 @@ public class NPCPackets1_12 implements NPCPackets {
         WrappedGameProfile profile = WrappedGameProfile.fromPlayer(player);
 
         WrappedSignedProperty current = Iterables.getFirst(profile.getProperties().get("textures"), null);
-        String texture = current.getValue();
-        String signature = current.getSignature();
 
-        if(current.getValue() == null || current.getSignature() == null){
-            texture = "";
-            signature = "";
+        String texture = "";
+        String signature = "";
+        if(current  != null){
+            texture = current.getValue();
+            signature = current.getSignature();
+        }
+
+        if(npc.getSignature() != null && npc.getTexture() != null){
+            texture = npc.getTexture();
+            signature = npc.getSignature();
         }
 
         if(npc.getDisplayName() == null || npc.getLocation() == null ) return;
@@ -56,6 +66,25 @@ public class NPCPackets1_12 implements NPCPackets {
         playerEp.playerConnection.sendPacket(packetPlayOutPlayerInfo);
 
         PacketPlayOutNamedEntitySpawn namedEntitySpawn = new PacketPlayOutNamedEntitySpawn(entityPlayer);
+
+        PacketContainer entityData = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_METADATA);
+
+        entityData.getIntegers().write(0, entityPlayer.getId());
+
+        WrappedDataWatcher wrappedWatchableObjects = new WrappedDataWatcher(entityPlayer.getDataWatcher());
+
+        byte overlays = 0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40;
+
+        wrappedWatchableObjects.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(13, WrappedDataWatcher.Registry.get(Byte.class)), overlays);
+
+        entityData.getWatchableCollectionModifier().write(0, wrappedWatchableObjects.getWatchableObjects());
+
+        try {
+            PandaNPC.get().getProtocolManager().sendServerPacket(player, entityData);
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
         playerEp.playerConnection.sendPacket(namedEntitySpawn);
 
         List<PacketPlayOutEntityEquipment> entityEquipments = Lists.newArrayList();

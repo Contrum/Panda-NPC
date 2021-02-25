@@ -7,8 +7,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import us.pandamc.npc.PandaNPC;
-import us.pandamc.npc.events.NPCInteractEvent;
+import us.pandamc.npc.npc.events.NPCInteractEvent;
 import us.pandamc.npc.npc.NPC;
+import us.pandamc.npc.utils.TaskUtil;
+import us.pandamc.npc.utils.cooldown.Cooldown;
 
 import java.lang.reflect.Field;
 
@@ -59,7 +61,11 @@ public class ProtocolListeners implements PacketListener {
             }
 
             event.setCancelled(true);
-            Bukkit.getScheduler().runTask(PandaNPC.get(), () -> Bukkit.getPluginManager().callEvent(new NPCInteractEvent(player, npc, action)));
+            if(Cooldown.getCooldownMap().get("npcfix").isOnCooldown(player)){
+                return;
+            }
+            Cooldown.getCooldownMap().get("npcfix").setCooldown(player);
+            TaskUtil.run(() -> Bukkit.getPluginManager().callEvent(new NPCInteractEvent(player, npc, action)));
         }
     }
 

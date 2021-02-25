@@ -1,6 +1,9 @@
-name: PandaNPC
+name: NPC
 author: EnzoL_
 main: us.pandamc.npc.PandaNPC
-version: 1.0-SNAPSHOT
+version: 1.1.1-SNAPSHOT
 depend:
   - ProtocolLib
+commands:
+  pandanpc:
+    aliases: npc

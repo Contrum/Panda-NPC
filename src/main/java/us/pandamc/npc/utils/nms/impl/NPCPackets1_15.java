@@ -1,15 +1,19 @@
 package us.pandamc.npc.utils.nms.impl;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.minecraft.server.v1_8_R3.*;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import net.minecraft.server.v1_15_R1.*;
+import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import us.pandamc.npc.PandaNPC;
@@ -18,10 +22,11 @@ import us.pandamc.npc.utils.CC;
 import us.pandamc.npc.utils.NPCUtils;
 import us.pandamc.npc.utils.nms.NPCPackets;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.UUID;
 
-public class NPCPackets1_8 implements NPCPackets {
+public class NPCPackets1_15 implements NPCPackets {
 
     @Override
     public void spawn(NPC npc, Player player) {
@@ -38,7 +43,6 @@ public class NPCPackets1_8 implements NPCPackets {
             texture = current.getValue();
             signature = current.getSignature();
         }
-
         if(npc.getSignature() != null && npc.getTexture() != null){
             texture = npc.getTexture();
             signature = npc.getSignature();
@@ -56,28 +60,21 @@ public class NPCPackets1_8 implements NPCPackets {
             new PlayerInteractManager(((CraftWorld)npc.getLocation().getWorld()).getHandle()));
 
         entityPlayer.setPosition(npc.getLocation().getX(), npc.getLocation().getY(), npc.getLocation().getZ());
+        entityPlayer.getDataWatcher().set(new DataWatcherObject<>(12, DataWatcherRegistry.a), (byte) 0xFF);
 
         PacketPlayOutPlayerInfo packetPlayOutPlayerInfo = new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, entityPlayer);
         playerEp.playerConnection.sendPacket(packetPlayOutPlayerInfo);
 
         PacketPlayOutNamedEntitySpawn namedEntitySpawn = new PacketPlayOutNamedEntitySpawn(entityPlayer);
-
-        DataWatcher data = entityPlayer.getDataWatcher();
-        byte overlays = 0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40;
-        data.watch(10, overlays);
-        PacketPlayOutEntityMetadata metadata = new PacketPlayOutEntityMetadata(entityPlayer.getId(), data, true);
-        playerEp.playerConnection.sendPacket(metadata);
-
         playerEp.playerConnection.sendPacket(namedEntitySpawn);
-
 
         List<PacketPlayOutEntityEquipment> entityEquipments = Lists.newArrayList();
 
-        if(npc.getHand() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), 0, CraftItemStack.asNMSCopy(npc.getHand())));
-        if(npc.getHelmet() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), 4, CraftItemStack.asNMSCopy(npc.getHelmet())));
-        if(npc.getChest() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), 3, CraftItemStack.asNMSCopy(npc.getChest())));
-        if(npc.getLegs() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), 2, CraftItemStack.asNMSCopy(npc.getLegs())));
-        if(npc.getBoots() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), 1, CraftItemStack.asNMSCopy(npc.getBoots())));
+        if(npc.getHand() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), EnumItemSlot.MAINHAND, CraftItemStack.asNMSCopy(npc.getHand())));
+        if(npc.getHelmet() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), EnumItemSlot.HEAD, CraftItemStack.asNMSCopy(npc.getHelmet())));
+        if(npc.getChest() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), EnumItemSlot.CHEST, CraftItemStack.asNMSCopy(npc.getChest())));
+        if(npc.getLegs() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), EnumItemSlot.LEGS, CraftItemStack.asNMSCopy(npc.getLegs())));
+        if(npc.getBoots() != null) entityEquipments.add(new PacketPlayOutEntityEquipment(entityPlayer.getId(), EnumItemSlot.FEET, CraftItemStack.asNMSCopy(npc.getBoots())));
 
         entityEquipments.forEach(packet -> playerEp.playerConnection.sendPacket(packet));
 

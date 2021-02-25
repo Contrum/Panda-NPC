@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class CC {
 
+    public static String MENU_BAR = ChatColor.DARK_GRAY.toString() + ChatColor.STRIKETHROUGH.toString() + "------------------------";
+
     public String translate(String str){
         return ChatColor.translateAlternateColorCodes('&', str);
     }

@@ -1,6 +1,6 @@
-package com.file.type;
+package us.pandamc.npc.utils.file.type;
 
-import com.file.AbstractConfigurationFile;
+import us.pandamc.npc.utils.file.AbstractConfigurationFile;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;

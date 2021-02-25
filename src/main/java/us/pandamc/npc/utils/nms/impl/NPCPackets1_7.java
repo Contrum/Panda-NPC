@@ -31,12 +31,17 @@ public class NPCPackets1_7 implements NPCPackets {
         WrappedGameProfile profile = WrappedGameProfile.fromPlayer(player);
 
         WrappedSignedProperty current = Iterables.getFirst(profile.getProperties().get("textures"), null);
-        String texture = current.getValue();
-        String signature = current.getSignature();
 
-        if(current.getValue() == null || current.getSignature() == null){
-            texture = "";
-            signature = "";
+        String texture = "";
+        String signature = "";
+        if(current  != null){
+            texture = current.getValue();
+            signature = current.getSignature();
+        }
+
+        if(npc.getSignature() != null && npc.getTexture() != null){
+            texture = npc.getTexture();
+            signature = npc.getSignature();
         }
 
         if(npc.getDisplayName() == null || npc.getLocation() == null ) return;
@@ -56,6 +61,11 @@ public class NPCPackets1_7 implements NPCPackets {
         playerEp.playerConnection.sendPacket(packetPlayOutPlayerInfo);
 
         PacketPlayOutNamedEntitySpawn namedEntitySpawn = new PacketPlayOutNamedEntitySpawn(entityPlayer);
+        DataWatcher data = entityPlayer.getDataWatcher();
+        byte overlays = 0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40;
+        data.watch(10, overlays);
+        PacketPlayOutEntityMetadata metadata = new PacketPlayOutEntityMetadata(entityPlayer.getId(), data, true);
+        playerEp.playerConnection.sendPacket(metadata);
         playerEp.playerConnection.sendPacket(namedEntitySpawn);
 
         List<PacketPlayOutEntityEquipment> entityEquipments = Lists.newArrayList();

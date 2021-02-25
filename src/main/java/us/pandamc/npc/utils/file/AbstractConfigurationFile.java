@@ -1,4 +1,4 @@
-package com.file;
+package us.pandamc.npc.utils.file;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

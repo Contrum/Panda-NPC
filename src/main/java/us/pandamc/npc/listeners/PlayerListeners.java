@@ -5,9 +5,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.ItemStack;
 import us.pandamc.npc.PandaNPC;
-import us.pandamc.npc.events.NPCInteractEvent;
+import us.pandamc.npc.npc.events.NPCInteractEvent;
 import us.pandamc.npc.npc.NPC;
+import us.pandamc.npc.npc.select.NPCSelect;
 import us.pandamc.npc.utils.TaskUtil;
 
 public class PlayerListeners implements Listener {
@@ -25,12 +27,19 @@ public class PlayerListeners implements Listener {
         Player player = event.getPlayer();
         NPC npc = event.getNpc();
 
-        player.performCommand(npc.getCommand());
-    }
+        ItemStack item = player.getItemInHand();
+        if(item.equals(NPCSelect.selectItem())) return;
 
+        if(event.getAction() == NPCInteractEvent.Action.RIGHT_CLICK){
+            if(npc.getCommands() != null){
+                npc.getCommands().forEach(player::performCommand);
+            }
+        }
+    }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event){
+        NPCSelect.unSelect(event.getPlayer());
         NPC.getNpcs().values().forEach(npc -> npc.getEntitys().remove(event.getPlayer().getUniqueId()));
     }
 
@@ -42,7 +51,10 @@ public class PlayerListeners implements Listener {
         if (from.getBlockX() != to.getBlockX() || from.getBlockY() != to.getBlockY() || from.getBlockZ() != to.getBlockZ()) {
             NPC.getNpcs().values().forEach(npc -> {
                 Location location = npc.getLocation();
-                if (location != null && from.distance(location) > 60 && to.distance(location) < 60) {
+                if(location == null) return;
+                if(location.getWorld() != from.getWorld()) return;
+                if(location.getWorld() != to.getWorld()) return;
+                if (from.distance(location) > 60 && to.distance(location) < 60) {
                     plugin.getPackets().destroy(npc, player);
                     plugin.getPackets().spawn(npc, player);
                 }
@@ -55,7 +67,9 @@ public class PlayerListeners implements Listener {
         Player player = event.getPlayer();
         NPC.getNpcs().values().forEach(npc -> {
             Location location = npc.getLocation();
-            if(location != null && location.distance(player.getLocation()) > 30){
+            if(location == null) return;
+            if(location.getWorld() != player.getLocation().getWorld()) return;
+            if(location.distance(player.getLocation()) > 30){
                 plugin.getPackets().destroy(npc, player);
                 plugin.getPackets().spawn(npc, player);
             }

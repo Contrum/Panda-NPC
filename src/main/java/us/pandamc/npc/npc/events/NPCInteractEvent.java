@@ -1,4 +1,4 @@
-package us.pandamc.npc.events;
+package us.pandamc.npc.npc.events;
 
 import lombok.Getter;
 import org.bukkit.entity.Player;

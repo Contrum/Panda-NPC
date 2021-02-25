@@ -1,10 +1,12 @@
 package us.pandamc.npc.npc;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -13,6 +15,7 @@ import us.pandamc.npc.PandaNPC;
 import us.pandamc.npc.utils.ItemUtils;
 import us.pandamc.npc.utils.LocationUtil;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,11 +27,14 @@ public class NPC {
     @Getter private static Map<String, NPC> npcs = Maps.newHashMap();
     private final Map<UUID, Integer> entitys = Maps.newHashMap();
 
-    private final String name, displayName;
-    private final Location location;
+    private final String name;
+    private String displayName;
+    private Location location;
     private ItemStack helmet, chest, legs, boots, hand;
     private float yaw, headYaw, pitch;
-    private String command;
+    private List<String> commands = Lists.newArrayList();
+    private String signature;
+    private String texture;
 
     public static NPC getByName(String name){
         return npcs.get(name);
@@ -44,24 +50,37 @@ public class NPC {
         return null;
     }
 
+    public void destroyAll(){
+        Bukkit.getOnlinePlayers().forEach(player -> PandaNPC.get().getPackets().destroy(this, player));
+    }
+
+    public void spawnAll(){
+        Bukkit.getOnlinePlayers().forEach(player -> PandaNPC.get().getPackets().spawn(this, player));
+    }
+
     public void save() {
-        ConfigurationSection section = PandaNPC.get().getNpcsConfig().getConfiguration().getConfigurationSection("npcs");
+        ConfigurationSection section =  PandaNPC.get().getNpcsConfig().getConfiguration().getConfigurationSection("npcs." + name);
+
+        if(section == null) section = PandaNPC.get().getNpcsConfig().getConfiguration().createSection("npcs." + name);
 
         section.set("name", this.name);
-        section.set("displayName." + this.name, this.displayName);
-        section.set("location." + this.name, LocationUtil.serialize(this.location));
+        section.set("displayName", this.displayName);
+        section.set("location", LocationUtil.serialize(this.location));
 
-        if (this.helmet != null) section.set("helmet." + this.name, ItemUtils.serialize(this.helmet));
-        if (this.chest != null) section.set("chest." + this.name, ItemUtils.serialize(this.chest));
-        if (this.legs != null) section.set("legs." + this.name, ItemUtils.serialize(this.legs));
-        if (this.boots != null) section.set("boots." + this.name, ItemUtils.serialize(this.boots));
-        if (this.hand != null) section.set("hand." + this.name, ItemUtils.serialize(this.hand));
+        if (this.helmet != null) section.set("helmet", ItemUtils.serialize(this.helmet));
+        if (this.chest != null) section.set("chest", ItemUtils.serialize(this.chest));
+        if (this.legs != null) section.set("legs", ItemUtils.serialize(this.legs));
+        if (this.boots != null) section.set("boots", ItemUtils.serialize(this.boots));
+        if (this.hand != null) section.set("hand", ItemUtils.serialize(this.hand));
 
-        section.set("yaw." + this.name, this.location.getYaw());
-        section.set("headYaw." + this.name, this.location.getYaw());
-        section.set("pitch." + this.name, this.location.getPitch());
+        section.set("yaw", this.location.getYaw());
+        section.set("headYaw", this.location.getYaw());
+        section.set("pitch", this.location.getPitch());
 
-        if (this.command != null) section.set("command." + this.name, this.command);
+        if (this.signature != null) section.set("signature", signature);
+        if (this.texture != null) section.set("texture", texture);
+
+        if (!this.commands.isEmpty()) section.set("commands", this.commands);
 
         PandaNPC.get().getNpcsConfig().save();
         PandaNPC.get().getNpcsConfig().reload();
@@ -75,22 +94,48 @@ public class NPC {
         section.getKeys(false).forEach(key -> {
             String name = section.getString(key + ".name");
             String displayName = section.getString(key + ".displayName");
+
+            String value = section.getString(key + ".signature");
+            String texture = section.getString(key + ".texture");
             Location location = LocationUtil.deserialize(section.getString(key + ".location"));
-            ItemStack hand = ItemUtils.deSerialized(section.getString(key + ".hand"));
 
-            ItemStack helmet = ItemUtils.deSerialized(section.getString(key + ".helmet"));
-            ItemStack chest = ItemUtils.deSerialized(section.getString(key + ".chest"));
-            ItemStack legs = ItemUtils.deSerialized(section.getString(key + ".legs"));
-            ItemStack boots = ItemUtils.deSerialized(section.getString(key + ".boots"));
+            ItemStack hand = null;
 
-            float yaw = (float) section.get(key + ".yaw");
-            float headYaw = (float) section.get(key + ".headYaw");
-            float pitch = (float) section.get(key + ".pitch");
+            if(section.getString(key + ".hand") != null) hand = ItemUtils.deSerialized(section.getString(key + ".hand"));
 
-            String command = section.getString(key + ".command");
+            ItemStack helmet = null;
 
-            npcs.put(name, new NPC(name, displayName, location, helmet, chest, legs, boots, hand, yaw, headYaw, pitch, command));
+            if(section.getString(key + ".helmet") != null) helmet = ItemUtils.deSerialized(section.getString(key + ".helmet"));
+
+            ItemStack chest = null;
+
+            if(section.getString(key + ".chest") != null) chest = ItemUtils.deSerialized(section.getString(key + ".chest"));
+
+            ItemStack legs = null;
+
+            if(section.getString(key + ".legs") != null) legs = ItemUtils.deSerialized(section.getString(key + ".legs"));
+
+            ItemStack boots = null;
+
+            if(section.getString(key + ".boots") != null) boots = ItemUtils.deSerialized(section.getString(key + ".boots"));
+
+            float yaw = (float) section.getDouble(key + ".yaw");
+            float headYaw = (float) section.getDouble(key + ".headYaw");
+            float pitch = (float) section.getDouble(key + ".pitch");
+
+            List<String> command = section.getStringList(key + ".commands");
+
+            npcs.put(name, new NPC(name, displayName, location, helmet, chest, legs, boots, hand, yaw, headYaw, pitch, command, value, texture));
         });
     }
 
+    public void delete() {
+        this.destroyAll();
+        ConfigurationSection section =  PandaNPC.get().getNpcsConfig().getConfiguration().getConfigurationSection("npcs");
+        section.set(name, null);
+
+        PandaNPC.get().getNpcsConfig().save();
+        PandaNPC.get().getNpcsConfig().reload();
+        npcs.remove(this.name);
+    }
 }
