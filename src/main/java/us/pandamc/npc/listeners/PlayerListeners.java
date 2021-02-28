@@ -1,6 +1,8 @@
 package us.pandamc.npc.listeners;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -31,8 +33,15 @@ public class PlayerListeners implements Listener {
         if(item.equals(NPCSelect.selectItem())) return;
 
         if(event.getAction() == NPCInteractEvent.Action.RIGHT_CLICK){
-            if(npc.getCommands() != null){
-                npc.getCommands().forEach(player::performCommand);
+            if (!npc.getCommands().isEmpty()){
+                npc.getCommands().forEach((key, value) -> {
+                    if (key) {
+                        TaskUtil.run(() -> Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(),
+                                value.replace("%player%", player.getName())));
+                    } else {
+                        player.performCommand(value);
+                    }
+                });
             }
         }
     }

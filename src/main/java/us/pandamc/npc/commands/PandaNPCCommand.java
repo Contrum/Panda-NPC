@@ -41,7 +41,7 @@ public class PandaNPCCommand implements CommandExecutor {
             sender.sendMessage(CC.translate("&7- &b/" + label + "&7 tphere <name>"));
             sender.sendMessage(CC.translate("&7- &b/" + label + "&7 teleport <name>"));
             sender.sendMessage(CC.translate("&7- &b/" + label + "&7 setarmor <name>"));
-            sender.sendMessage(CC.translate("&7- &b/" + label + "&7 addcommand <name> (command)"));
+            sender.sendMessage(CC.translate("&7- &b/" + label + "&7 addcommand <name> <console> (command)"));
             sender.sendMessage(CC.translate("&7- &b/" + label + "&7 removecommand <name> (number)"));
             sender.sendMessage(CC.translate("&7- &b/" + label + "&7 listcommands <name>"));
             sender.sendMessage(CC.translate("&7- &b/" + label + "&7 setskin <name> (skiname)"));
@@ -184,36 +184,38 @@ public class PandaNPCCommand implements CommandExecutor {
                 npc.save();
                 player.sendMessage(CC.translate("&aNPC set armor correctly"));
             }else if (args[0].equalsIgnoreCase("addcommand")) {
-                if(NPCSelect.getSelectedNPC(player) != null){
+                if (NPCSelect.getSelectedNPC(player) != null) {
                     if (args.length < 2) {
-                        player.sendMessage(CC.translate("&cPlease usage: /" + label + " addcommand (command)"));
+                        player.sendMessage(CC.translate("&cPlease usage: /" + label + " addcommand <console> (command)"));
                         return true;
                     }
-                    String[] newArray = Arrays.copyOfRange(args, 1, args.length);
+                    boolean console = Boolean.parseBoolean(args[1]);
+                    String[] newArray = Arrays.copyOfRange(args, 2, args.length);
                     String commandNPC = String.join(" ", newArray);
                     NPC npc = NPCSelect.getSelectedNPC(player);
                     if(npc == null){
                         player.sendMessage(CC.translate("&cNpc not found."));
                         return false;
                     }
-                    npc.getCommands().add(commandNPC);
+                    npc.getCommands().put(console, commandNPC);
                     npc.save();
                     player.sendMessage(CC.translate("&aNPC add command correctly"));
                     return true;
                 }
-                if (args.length < 4) {
-                    player.sendMessage(CC.translate("&cPlease usage: /" + label + " addcommand (name) (command)"));
+                if (args.length < 5) {
+                    player.sendMessage(CC.translate("&cPlease usage: /" + label + " addcommand <name> <console (command)"));
                     return true;
                 }
+                boolean console = Boolean.parseBoolean(args[2]);
                 String npcName = args[1];
-                String[] newArray = Arrays.copyOfRange(args, 2, args.length);
+                String[] newArray = Arrays.copyOfRange(args, 3, args.length);
                 String commandNPC = String.join(" ", newArray);
                 NPC npc = NPC.getByName(npcName);
                 if(npc == null){
                     player.sendMessage(CC.translate("&cNpc not found."));
                     return false;
                 }
-                npc.getCommands().add(commandNPC);
+                npc.getCommands().put(console, commandNPC);
                 npc.save();
                 player.sendMessage(CC.translate("&aNPC add command correctly"));
             }else if (args[0].equalsIgnoreCase("removecommand")) {
@@ -271,7 +273,8 @@ public class PandaNPCCommand implements CommandExecutor {
                         player.sendMessage(CC.MENU_BAR);
                         return true;
                     }
-                    npc.getCommands().forEach(commandNPC -> player.sendMessage(CC.translate("&7- &b" + commandNPC)));
+                    npc.getCommands().keySet().forEach(parseBoolean ->
+                            player.sendMessage(CC.translate("&7- &b" + npc.getCommands().get(parseBoolean) + " &7｜ &" + (parseBoolean ? "&a" : "&c") + parseBoolean)));
                     player.sendMessage(CC.MENU_BAR);
                     return true;
                 }
@@ -292,7 +295,8 @@ public class PandaNPCCommand implements CommandExecutor {
                     player.sendMessage(CC.translate("&cNo commands added"));
                     player.sendMessage(CC.MENU_BAR);
                 }
-                npc.getCommands().forEach(commandNPC -> player.sendMessage(CC.translate(i.getAndIncrement() + " &7- &b" + commandNPC)));
+                npc.getCommands().keySet().forEach(parseBoolean ->
+                        player.sendMessage(CC.translate("&7- &b" + npc.getCommands().get(parseBoolean) + " &7｜ &b" + (parseBoolean ? "&a" : "&c") + parseBoolean)));
                 player.sendMessage(CC.MENU_BAR);
             }else if (args[0].equalsIgnoreCase("list")) {
                 sender.sendMessage(CC.translate("&3&lPandaNPC List"));
@@ -404,7 +408,7 @@ public class PandaNPCCommand implements CommandExecutor {
                 sender.sendMessage(CC.translate("&7- &b/" + label + " setlocation (name)"));
                 sender.sendMessage(CC.translate("&7- &b/" + label + " teleport (name)"));
                 sender.sendMessage(CC.translate("&7- &b/" + label + " setarmor (name)"));
-                sender.sendMessage(CC.translate("&7- &b/" + label + " addcommand (name) (command)"));
+                sender.sendMessage(CC.translate("&7- &b/" + label + " addcommand (name) (console) (command)"));
                 sender.sendMessage(CC.translate("&7- &b/" + label + " removecommand (name) (number)"));
                 sender.sendMessage(CC.translate("&7- &b/" + label + " listcommands (name)"));
                 sender.sendMessage(CC.translate("&7- &b/" + label + " setskin (name) (skiname)"));

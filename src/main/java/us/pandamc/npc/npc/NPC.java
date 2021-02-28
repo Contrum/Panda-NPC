@@ -2,6 +2,7 @@ package us.pandamc.npc.npc;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import us.pandamc.npc.utils.LocationUtil;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter @Setter
@@ -32,7 +34,7 @@ public class NPC {
     private Location location;
     private ItemStack helmet, chest, legs, boots, hand;
     private float yaw, headYaw, pitch;
-    private List<String> commands = Lists.newArrayList();
+    private Map<Boolean, String> commands = Maps.newHashMap();
     private String signature;
     private String texture;
 
@@ -80,7 +82,15 @@ public class NPC {
         if (this.signature != null) section.set("signature", signature);
         if (this.texture != null) section.set("texture", texture);
 
-        if (!this.commands.isEmpty()) section.set("commands", this.commands);
+        if (!this.commands.isEmpty()) {
+            section.set("commands", this.commands);
+            int b = 0;
+            for (Boolean key : this.commands.keySet()) {
+                b++;
+                section.set("commands." + b + ".boolean", key);
+                section.set("commands." + b + ".command", this.commands.get(key));
+            }
+        }
 
         PandaNPC.get().getNpcsConfig().save();
         PandaNPC.get().getNpcsConfig().reload();
@@ -123,7 +133,13 @@ public class NPC {
             float headYaw = (float) section.getDouble(key + ".headYaw");
             float pitch = (float) section.getDouble(key + ".pitch");
 
-            List<String> command = section.getStringList(key + ".commands");
+            Map<Boolean, String> command = Maps.newHashMap();
+            if (section.getConfigurationSection(key + ".commands") != null) {
+                for (String s : section.getConfigurationSection(key + ".commands").getKeys(false)) {
+                    command.put(section.getBoolean(key + ".commands." + s + ".boolean"),
+                            section.getString(key + ".commands." + s + ".command"));
+                }
+            }
 
             npcs.put(name, new NPC(name, displayName, location, helmet, chest, legs, boots, hand, yaw, headYaw, pitch, command, value, texture));
         });
