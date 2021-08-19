@@ -1,15 +1,1 @@
-npcs:
-  test:
-    name: test
-    displayName: test
-    location: world:-162.33923459849896:4.0:776.4940517242627:-170.47241:4.574793
-    yaw: -170.47241
-    headYaw: -170.47241
-    pitch: 4.574793
-  asd:
-    name: asd
-    displayName: asd
-    location: world:-162.66611801779624:4.0:766.9758682311217:-9.1886425:4.780084
-    yaw: -9.1886425
-    headYaw: -9.1886425
-    pitch: 4.780084
+npcs: {}
